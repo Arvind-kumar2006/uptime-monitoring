@@ -1,8 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 
-// In docker-compose the browser talks to the backend via its host-mapped port,
-// not the internal service name (the browser isn't part of the compose network).
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 function StatusBadge({ status }) {

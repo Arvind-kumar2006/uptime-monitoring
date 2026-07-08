@@ -6,7 +6,7 @@ RUN npm install
 
 COPY . .
 
-# Baked into the JS bundle at build time so the browser knows where the backend is
+
 ARG VITE_API_URL=http://localhost:4000
 ENV VITE_API_URL=$VITE_API_URL
 

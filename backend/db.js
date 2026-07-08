@@ -1,7 +1,6 @@
 const Database = require('better-sqlite3');
 const path = require('path');
 
-// SQLite file lives in a mounted volume so data survives container restarts
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'data', 'monitor.db');
 
 const fs = require('fs');

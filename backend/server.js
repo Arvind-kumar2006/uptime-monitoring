@@ -35,7 +35,6 @@ const getHistory = db.prepare(`
   LIMIT 50
 `);
 
-// GET /api/urls - list all monitored URLs with their latest status
 app.get('/api/urls', (req, res) => {
   const urls = db.prepare('SELECT * FROM urls ORDER BY created_at ASC').all();
   const withStatus = urls.map((u) => {
@@ -54,13 +53,11 @@ app.get('/api/urls', (req, res) => {
   res.json(withStatus);
 });
 
-// GET /api/urls/:id/history - recent check history for one URL
 app.get('/api/urls/:id/history', (req, res) => {
   const history = getHistory.all(req.params.id);
   res.json(history);
 });
 
-// POST /api/urls - register a new URL to monitor
 app.post('/api/urls', (req, res) => {
   const { name, url } = req.body;
 
@@ -77,8 +74,6 @@ app.post('/api/urls', (req, res) => {
 
   try {
     const info = insertUrl.run({ name: name || parsed.hostname, url });
-    // Kick off an immediate check for the newly added URL so the UI doesn't
-    // have to wait up to 60s to show its first status
     checkAllUrls(io).catch((e) => console.error('Immediate check failed:', e));
     res.status(201).json({ id: info.lastInsertRowid, name: name || parsed.hostname, url });
   } catch (err) {
@@ -89,7 +84,6 @@ app.post('/api/urls', (req, res) => {
   }
 });
 
-// DELETE /api/urls/:id - stop monitoring a URL
 app.delete('/api/urls/:id', (req, res) => {
   deleteUrl.run(req.params.id);
   res.status(204).send();

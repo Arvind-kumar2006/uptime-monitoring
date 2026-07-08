@@ -41,7 +41,6 @@ async function pingUrl(row, io) {
     });
     if (io) io.emit('status_update');
   } catch (err) {
-    // Network error, DNS failure, timeout, refused connection, etc. -> treat as down
     const responseTime = Date.now() - start;
     insertCheck.run({
       url_id: row.id,
@@ -62,10 +61,8 @@ async function checkAllUrls(io) {
 
 async function startScheduler(io) {
   await initBrowser();
-  // Run once immediately on boot so the dashboard has data right away
   checkAllUrls(io).catch((e) => console.error('Initial check run failed:', e));
 
-  // Then every minute, per the assignment's "checked every minute or so" scale
   cron.schedule('* * * * *', () => {
     checkAllUrls(io).catch((e) => console.error('Scheduled check run failed:', e));
   });
