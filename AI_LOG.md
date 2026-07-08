@@ -6,6 +6,7 @@
 - **Role**: Generated the backend API, scheduler, frontend dashboard, Dockerfiles,
   docker-compose orchestration, and this documentation, based on the assignment
   brief pasted directly into the conversation.
+- **Recent Updates**: Collaborated with Google Antigravity (Gemini 3.1 Pro) to architect and implement WebSockets (Socket.io) for real-time updates and Puppeteer Stealth for bypassing advanced bot detection.
 
 ## The Prompts That Shipped It
 
@@ -30,11 +31,13 @@
      `GET /api/urls/:id/history`, `DELETE /api/urls/:id`), including URL
      validation and an immediate check triggered on registration (so the UI
      isn't stuck showing "pending" for up to a minute after adding a URL).
-   - `frontend/src/App.jsx`: a polling dashboard (5s interval) with a form to add
-     URLs and a table showing status badges, HTTP code, response time, and last
-     check time.
+   - `frontend/src/App.jsx`: a dashboard with a form to add URLs and a table showing status badges, HTTP code, response time, and last check time.
    - `docker-compose.yml` and two Dockerfiles (backend: Node + native build tools
      for `better-sqlite3`; frontend: multi-stage build served by nginx).
+
+4. **Real-time & Stealth Upgrade (Google Antigravity)** — I asked to improve the real-time nature of the app and handle 403s:
+   > "Add a User-Agent header to the ping logic so sites like these register as UP... and for real time we can use websocket"
+   The AI architected an implementation plan to swap the 5-second polling loop for `socket.io`, pushing real-time updates to the React dashboard. After seeing that a simple User-Agent header still failed against Cloudflare, the AI proposed and implemented a heavier "Perfect Solution": replacing `node-fetch` with a real headless Chrome browser (`puppeteer-extra-plugin-stealth`), ensuring the bot perfectly mimics a real user.
 
 ## Course Corrections
 
@@ -76,11 +79,4 @@ all — some sites' bot/scraper protection returns `403` to requests that don't
 look like a real browser (no `User-Agent`, no `Accept` header), which the
 monitor was then correctly-but-misleadingly reporting as "down."
 
-**The fix**: added a realistic browser `User-Agent` and `Accept` header to every
-outbound check (`REQUEST_HEADERS` in `scheduler.js`). This is a judgment call
-worth stating explicitly rather than hiding: the monitor is now checking "is this
-reachable by something that looks like a normal browser request," not "is this
-reachable by literally anything." A stricter/more honest monitor could instead
-surface *both* signals (raw fetch vs. browser-like fetch) so a 403-only-to-bots
-site doesn't get silently masked — that's a reasonable v2 feature, called out
-here rather than quietly designed around.
+**The fix**: Initially, we added a realistic browser `User-Agent` and `Accept` header. However, this course-correction proved insufficient against modern Cloudflare bot protection, which inspects TLS fingerprints and missing HTTP/2 headers. The final fix was a major architectural shift: we completely replaced `node-fetch` with `puppeteer-extra-plugin-stealth`, launching a real headless Chrome browser to execute the pings. This accurately bypasses bot detection and registers sites as "UP", at the tradeoff of significantly higher CPU and RAM usage.
